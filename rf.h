@@ -37,7 +37,7 @@ typedef enum {
 
 typedef enum {
 	NRF_AW_3 = 0,
-	NRW_AW_4,
+	NRF_AW_4,
 	NRF_AW_5
 } NRF_AW;
 
@@ -97,6 +97,7 @@ typedef enum {
 #define NRF_CONFIG_MASK_RX_DR				(1<<6)
 
 // Feature register masks
+#define NRF_FEATURE_DYN_ACK					(1<<0)
 #define NRF_FEATURE_ACK_PAYLOAD				(1<<1)
 #define NRF_FEATURE_DPL						(1<<2)
 
@@ -174,6 +175,7 @@ void rf_write_ack_payload(int pipe, void* data, int length);
 void rf_read_rx_payload(void* data, int length);
 void rf_set_frequency(int freq);
 int rf_get_frequency(void);
+int rf_get_address_width(void);
 void rf_power_up(void);
 void rf_power_down(void);
 void rf_mode_tx(void);

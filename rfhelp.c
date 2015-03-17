@@ -19,12 +19,20 @@
 #include "rf.h"
 #include "ch.h"
 #include "hal.h"
+#include <string.h>
 
 // Variables
 static Mutex rf_mutex;
+static char pipe0_addr[5];
+static char tx_addr[5];
+static int address_length;
 
 void rfhelp_init(void) {
 	chMtxInit(&rf_mutex);
+
+	address_length = rf_get_address_width();
+	rf_read_reg(NRF_REG_RX_ADDR_P0, pipe0_addr, address_length);
+	rf_read_reg(NRF_REG_TX_ADDR, tx_addr, address_length);
 }
 
 /**
@@ -43,12 +51,16 @@ void rfhelp_init(void) {
  */
 int rfhelp_send_data(char *data, int len) {
 	int timeout = 100;
+	int retval = 0;
 
 	chMtxLock(&rf_mutex);
 	rf_mode_tx();
-	rf_flush_all();
 	rf_clear_irq();
+	rf_flush_all();
 	rf_write_tx_payload(data, len);
+
+	// Set pipe0-address to the tx address for ack to work.
+	rf_set_rx_addr(0, tx_addr, address_length);
 
 	int s = rf_status();
 	while (!(NRF_STATUS_GET_TX_DS(s) || NRF_STATUS_GET_MAX_RT(s)) && timeout) {
@@ -56,16 +68,21 @@ int rfhelp_send_data(char *data, int len) {
 		s = rf_status();
 		timeout--;
 	}
+
+	if (NRF_STATUS_GET_MAX_RT(s)) {
+		rf_clear_maxrt_irq();
+		retval = -1;
+	} else if (timeout == 0) {
+		retval = -2;
+	}
+
+	// Restore pipe0 address
+	rf_set_rx_addr(0, pipe0_addr, address_length);
+
 	rf_mode_rx();
 	chMtxUnlock();
 
-	if (NRF_STATUS_GET_MAX_RT(s)) {
-		return -1;
-	} else if (timeout == 0) {
-		return -2;
-	}
-
-	return 0;
+	return retval;
 }
 
 /**
@@ -81,9 +98,9 @@ int rfhelp_send_data(char *data, int len) {
  * Pointer to the pipe on which the data was received. Can be 0.
  *
  * @return
+ * 1: Read OK, more data to read.
  * 0: Read OK
  * -1: No RX data
- * -2: RX fifo full
  */
 int rfhelp_read_rx_data(char *data, int *len, int *pipe) {
 	int retval = -1;
@@ -91,7 +108,6 @@ int rfhelp_read_rx_data(char *data, int *len, int *pipe) {
 	chMtxLock(&rf_mutex);
 
 	int s = rf_status();
-	int sf = rf_fifo_status();
 	int pipe_n = NRF_STATUS_GET_RX_P_NO(s);
 
 	if (pipe_n != 7) {
@@ -101,14 +117,12 @@ int rfhelp_read_rx_data(char *data, int *len, int *pipe) {
 		}
 		rf_read_rx_payload(data, *len);
 		rf_clear_rx_irq();
-		retval = 0;
-	}
 
-	if (sf & NRF_FIFO_RX_FULL) {
-		rf_flush_rx();
-
-		if (retval != 0) {
-			retval = -2;
+		s = rf_status();
+		if (NRF_STATUS_GET_RX_P_NO(s) == 7) {
+			retval = 0;
+		} else {
+			retval = 1;
 		}
 	}
 
@@ -123,4 +137,24 @@ int rfhelp_rf_status(void) {
 	chMtxUnlock();
 
 	return s;
+}
+
+void rfhelp_set_tx_addr(char *addr, int addr_len) {
+	memcpy(tx_addr, addr, addr_len);
+	address_length = addr_len;
+
+	chMtxLock(&rf_mutex);
+	rf_set_tx_addr(addr, addr_len);
+	chMtxUnlock();
+}
+
+void rfhelp_set_rx_addr(int pipe, char *addr, int addr_len) {
+	if (pipe == 0) {
+		memcpy(pipe0_addr, addr, addr_len);
+	}
+	address_length = addr_len;
+
+	chMtxLock(&rf_mutex);
+	rf_set_rx_addr(pipe, addr, addr_len);
+	chMtxUnlock();
 }

@@ -25,6 +25,11 @@ void rf_init(void) {
 	spi_sw_write_ce(1);
 
 	rf_power_up();
+
+	// Set default register values (TODO for the rest)
+	rf_write_reg_byte(NRF_REG_EN_RXADDR, 0);
+	rf_write_reg_byte(NRF_REG_DYNPD, 0);
+
 	rf_set_crc_type(NRF_CRC_1B);
 	rf_set_retr_retries(5);
 	rf_set_retr_delay(NRF_RETR_DELAY_500US);
@@ -32,15 +37,15 @@ void rf_init(void) {
 	rf_set_speed(NRF_SPEED_250K);
 	rf_set_address_width(NRF_AW_5);
 	rf_set_frequency(2400 + 0x20);
-	rf_enable_features(NRF_FEATURE_DPL);
+	rf_enable_features(NRF_FEATURE_DPL | NRF_FEATURE_DYN_ACK);
 
 	rf_enable_pipe_autoack(NRF_MASK_PIPE0);
 	rf_enable_pipe_address(NRF_MASK_PIPE0);
 	rf_enable_pipe_dlp(NRF_MASK_PIPE0);
 
 	char addr[5] = {0x3a, 0x3b, 0x3c, 0x3d, 0x01};
-	rf_set_tx_addr(addr, 5);
 	rf_set_rx_addr(0, addr, 5);
+	rf_set_tx_addr(addr, 5);
 
 	rf_mode_rx();
 	rf_flush_all();
@@ -204,6 +209,10 @@ void rf_set_frequency(int freq) {
 int rf_get_frequency(void) {
 	return rf_read_reg_byte(NRF_REG_RF_CH) + 2400;
 
+}
+
+int rf_get_address_width(void) {
+	return rf_read_reg_byte(NRF_REG_SETUP_AW) + 2;
 }
 
 // Turn on radio

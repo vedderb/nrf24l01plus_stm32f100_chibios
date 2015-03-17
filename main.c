@@ -58,8 +58,6 @@ static msg_t tx_thread(void *arg) {
 
 	chRegSetThreadName("TX");
 
-	rf_mode_tx();
-
 	for(;;) {
 		char pl[3] = {1, 4, 6};
 
@@ -95,17 +93,26 @@ static msg_t rx_thread(void *arg) {
 		char buf[32];
 		int len;
 		int pipe;
-		int res = rfhelp_read_rx_data(buf, &len, &pipe);
 
-		if (res == 0) {
-			printf_thd("Pipe: %i\r\n", pipe);
-			printf_thd("PL Length: %i\r\n", len);
+		for(;;) {
+			int res = rfhelp_read_rx_data(buf, &len, &pipe);
 
-			for(int i = 0;i < len;i++) {
-				printf_thd("PL B%i: %i\r\n", i, buf[i]);
+			// If something was read
+			if (res >= 0) {
+				printf_thd("Pipe: %i\r\n", pipe);
+				printf_thd("PL Length: %i\r\n", len);
+
+				for(int i = 0;i < len;i++) {
+					printf_thd("PL B%i: %i\r\n", i, buf[i]);
+				}
+
+				printf_thd("\r\n");
 			}
 
-			printf_thd("\r\n");
+			// Stop when there is no more data to read.
+			if (res <= 0) {
+				break;
+			}
 		}
 
 		chThdSleepMilliseconds(1);
@@ -138,6 +145,7 @@ int main(void) {
 	// NRF
 	rf_init();
 	rfhelp_init();
+
 	print_rf_status();
 
 	// Start threads
