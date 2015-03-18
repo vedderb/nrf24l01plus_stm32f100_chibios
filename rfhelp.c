@@ -36,11 +36,7 @@ void rfhelp_init(void) {
 	rf_read_reg(NRF_REG_RX_ADDR_P0, pipe0_addr, address_length);
 	rf_read_reg(NRF_REG_TX_ADDR, tx_addr, address_length);
 
-	if (memcmp(pipe0_addr, tx_addr, address_length) == 0) {
-		tx_pipe0_addr_eq = true;
-	} else {
-		tx_pipe0_addr_eq = false;
-	}
+	tx_pipe0_addr_eq = memcmp(pipe0_addr, tx_addr, address_length) == 0;
 }
 
 /**
@@ -69,7 +65,7 @@ int rfhelp_send_data(char *data, int len) {
 
 	rf_write_tx_payload(data, len);
 
-	// Set pipe0-address to the tx address for ack to work.
+	// Pipe0-address and tx-address must be equal for ack to work.
 	if (!tx_pipe0_addr_eq) {
 		rf_set_rx_addr(0, tx_addr, address_length);
 	}
@@ -164,11 +160,7 @@ void rfhelp_set_tx_addr(char *addr, int addr_len) {
 	memcpy(tx_addr, addr, addr_len);
 	address_length = addr_len;
 
-	if (memcmp(pipe0_addr, tx_addr, address_length) == 0) {
-		tx_pipe0_addr_eq = true;
-	} else {
-		tx_pipe0_addr_eq = false;
-	}
+	tx_pipe0_addr_eq = memcmp(pipe0_addr, tx_addr, address_length) == 0;
 
 	rf_set_tx_addr(addr, addr_len);
 	chMtxUnlock();
@@ -181,11 +173,7 @@ void rfhelp_set_rx_addr(int pipe, char *addr, int addr_len) {
 	}
 	address_length = addr_len;
 
-	if (memcmp(pipe0_addr, tx_addr, address_length) == 0) {
-		tx_pipe0_addr_eq = true;
-	} else {
-		tx_pipe0_addr_eq = false;
-	}
+	tx_pipe0_addr_eq = memcmp(pipe0_addr, tx_addr, address_length) == 0;
 
 	rf_set_rx_addr(pipe, addr, addr_len);
 	chMtxUnlock();
