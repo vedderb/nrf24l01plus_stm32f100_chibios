@@ -4,4 +4,4 @@ A ChibiOS-project with a driver for the nrf24l01+ RF transceiver.
 * CE can be tied high externally.
 * Polling is used instead of reading the INT pin.
 
-The driver is designed to use few pins and have high flexibility. Therefore it uses a bit more CPU resources than necessary.
+The driver is designed to use few pins and have high flexibility. Since it uses polling instead of interrupts, it uses a bit more CPU resources than necessary.

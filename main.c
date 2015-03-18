@@ -62,7 +62,7 @@ static msg_t tx_thread(void *arg) {
 		char pl[3] = {1, 4, 6};
 
 		switch (rfhelp_send_data(pl, 3)) {
-			case 0: printf_thd("Send probably OK\r\n"); break;
+			case 0: printf_thd("Send OK\r\n"); break;
 			case -1: printf_thd("Max RT\r\n"); break;
 			case -2: printf_thd("Timeout\r\n"); break;
 			default: break;
@@ -72,7 +72,7 @@ static msg_t tx_thread(void *arg) {
 
 		pl[0] = 119;
 		switch (rfhelp_send_data(pl, 3)) {
-		case 0: printf_thd("Send probably OK\r\n"); break;
+		case 0: printf_thd("Send OK\r\n"); break;
 		case -1: printf_thd("Max RT\r\n"); break;
 		case -2: printf_thd("Timeout\r\n"); break;
 		default: break;

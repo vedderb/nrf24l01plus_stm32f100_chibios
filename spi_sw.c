@@ -33,7 +33,7 @@ void spi_sw_init(void) {
 	palClearPad(PORT_SCK, PIN_SCK);
 }
 
-void spi_sw_transfer(char *in_buf, char *out_buf, int length) {
+void spi_sw_transfer(char *in_buf, const char *out_buf, int length) {
 	palClearPad(PORT_SCK, PIN_SCK);
 
 	for (int i = 0;i < length;i++) {

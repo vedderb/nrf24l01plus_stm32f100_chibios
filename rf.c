@@ -39,12 +39,16 @@ void rf_init(void) {
 	rf_set_frequency(2400 + 0x20);
 	rf_enable_features(NRF_FEATURE_DPL | NRF_FEATURE_DYN_ACK);
 
-	rf_enable_pipe_autoack(NRF_MASK_PIPE0);
-	rf_enable_pipe_address(NRF_MASK_PIPE0);
-	rf_enable_pipe_dlp(NRF_MASK_PIPE0);
+	rf_enable_pipe_autoack(NRF_MASK_PIPE0 | NRF_MASK_PIPE1);
+	rf_enable_pipe_address(NRF_MASK_PIPE0 | NRF_MASK_PIPE1);
+	rf_enable_pipe_dlp(NRF_MASK_PIPE0 | NRF_MASK_PIPE1);
 
-	char addr[5] = {0x3a, 0x3b, 0x3c, 0x3d, 0x01};
+	const char addr[5] = {0x3a, 0x3b, 0x3c, 0x3d, 0x01};
 	rf_set_rx_addr(0, addr, 5);
+
+	const char addr2[5] = {0x3b, 0x3b, 0x3c, 0x3d, 0x02};
+	rf_set_rx_addr(1, addr2, 5);
+
 	rf_set_tx_addr(addr, 5);
 
 	rf_mode_rx();
@@ -152,15 +156,15 @@ void rf_set_retr_delay(NRF_RETR_DELAY delay) {
 	}
 }
 
-void rf_set_rx_addr(int pipe, char* address, int addr_len) {
+void rf_set_rx_addr(int pipe, const char *address, int addr_len) {
 	rf_write_reg(NRF_REG_RX_ADDR_P0 + pipe, address, addr_len);
 }
 
-void rf_set_tx_addr(char* address, int addr_len) {
+void rf_set_tx_addr(const char *address, int addr_len) {
 	rf_write_reg(NRF_REG_TX_ADDR, address, addr_len);
 }
 
-void rf_write_tx_payload(void* data, int length) {
+void rf_write_tx_payload(const char *data, int length) {
 	char cmd = NRF_CMD_WRITE_TX_PAYLOAD;
 	spi_sw_begin();
 	spi_sw_transfer(0, &cmd, 1);
@@ -170,7 +174,7 @@ void rf_write_tx_payload(void* data, int length) {
 }
 
 // Write payload for transmission without requesting acknowledge
-void rf_write_tx_payload_no_ack(void* data, int length) {
+void rf_write_tx_payload_no_ack(const char *data, int length) {
 	char cmd = NRF_CMD_WRITE_TX_PAYLOAD_NO_ACK;
 	spi_sw_begin();
 	spi_sw_transfer(0, &cmd, 1);
@@ -180,7 +184,7 @@ void rf_write_tx_payload_no_ack(void* data, int length) {
 }
 
 // Write payload for acknowledge
-void rf_write_ack_payload(int pipe, void* data, int length) {
+void rf_write_ack_payload(int pipe, const char *data, int length) {
 	char cmd = NRF_CMD_WRITE_ACK_PAYLOAD | (pipe & 0x7);
 	spi_sw_begin();
 	spi_sw_transfer(0, &cmd, 1);
@@ -190,7 +194,7 @@ void rf_write_ack_payload(int pipe, void* data, int length) {
 }
 
 // Read recieved payload
-void rf_read_rx_payload(void* data, int length) {
+void rf_read_rx_payload(char *data, int length) {
 	char cmd = NRF_CMD_READ_RX_PAYLOAD;
 	spi_sw_begin();
 	spi_sw_transfer(0, &cmd, 1);
@@ -348,7 +352,7 @@ int rf_rx_power_detect(void) {
 	return rf_read_reg_byte(NRF_REG_RPD) >> 1;
 }
 
-void rf_write_reg(int reg, char *data, int len) {
+void rf_write_reg(int reg, const char *data, int len) {
 	char cmd = NRF_CMD_WRITE_REGISTER | reg;
 
 	spi_sw_begin();
