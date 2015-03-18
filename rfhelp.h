@@ -24,5 +24,6 @@ int rfhelp_send_data(char *data, int len);
 int rfhelp_read_rx_data(char *data, int *len, int *pipe);
 int rfhelp_rf_status(void);
 void rfhelp_set_tx_addr(char *addr, int addr_len);
+void rfhelp_set_rx_addr(int pipe, char *addr, int addr_len);
 
 #endif /* RFHELP_H_ */
