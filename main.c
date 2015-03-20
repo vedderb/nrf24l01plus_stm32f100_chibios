@@ -62,10 +62,9 @@ static msg_t tx_thread(void *arg) {
 	int timeout_sends = 0;
 	int maxrt_sends = 0;
 	int total_sends = 0;
+	char pl[3] = {1, 4, 6};
 
 	for(;;) {
-		char pl[3] = {1, 4, 6};
-
 		switch (rfhelp_send_data(pl, 3)) {
 		case 0:
 			printf_thd("Send OK\r\n");
@@ -94,34 +93,11 @@ static msg_t tx_thread(void *arg) {
 		printf_thd("\r\n");
 		chThdSleepMilliseconds(500);
 
-		pl[0] = 119;
-		switch (rfhelp_send_data(pl, 3)) {
-		case 0:
-			printf_thd("Send OK\r\n");
-			ok_sends++;
-			total_sends++;
-			break;
-		case -1:
-			printf_thd("Max RT\r\n");
-			maxrt_sends++;
-			total_sends++;
-			break;
-		case -2:
-			printf_thd("Timeout\r\n");
-			timeout_sends++;
-			total_sends++;
-			break;
-		default:
-			break;
+		if (pl[0] == 1) {
+			pl[0] = 119;
+		} else {
+			pl[0] = 1;
 		}
-		printf_thd("OK sends: %i\r\n"
-				"MaxRT sends: %i\r\n"
-				"Timeout sends: %i\r\n"
-				"Total sends: %i\r\n",
-				ok_sends, maxrt_sends,
-				timeout_sends, total_sends);
-		printf_thd("\r\n");
-		chThdSleepMilliseconds(500);
 	}
 
 	return 0;
