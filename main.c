@@ -13,7 +13,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+ */
 
 #include "ch.h"
 #include "hal.h"
@@ -58,25 +58,68 @@ static msg_t tx_thread(void *arg) {
 
 	chRegSetThreadName("TX");
 
+	int ok_sends = 0;
+	int timeout_sends = 0;
+	int maxrt_sends = 0;
+	int total_sends = 0;
+
 	for(;;) {
 		char pl[3] = {1, 4, 6};
 
 		switch (rfhelp_send_data(pl, 3)) {
-			case 0: printf_thd("Send OK\r\n"); break;
-			case -1: printf_thd("Max RT\r\n"); break;
-			case -2: printf_thd("Timeout\r\n"); break;
-			default: break;
+		case 0:
+			printf_thd("Send OK\r\n");
+			ok_sends++;
+			total_sends++;
+			break;
+		case -1:
+			printf_thd("Max RT\r\n");
+			maxrt_sends++;
+			total_sends++;
+			break;
+		case -2:
+			printf_thd("Timeout\r\n");
+			timeout_sends++;
+			total_sends++;
+			break;
+		default:
+			break;
 		}
+		printf_thd("OK sends: %i\r\n"
+				"MaxRT sends: %i\r\n"
+				"Timeout sends: %i\r\n"
+				"Total sends: %i\r\n",
+				ok_sends, maxrt_sends,
+				timeout_sends, total_sends);
 		printf_thd("\r\n");
 		chThdSleepMilliseconds(500);
 
 		pl[0] = 119;
 		switch (rfhelp_send_data(pl, 3)) {
-		case 0: printf_thd("Send OK\r\n"); break;
-		case -1: printf_thd("Max RT\r\n"); break;
-		case -2: printf_thd("Timeout\r\n"); break;
-		default: break;
+		case 0:
+			printf_thd("Send OK\r\n");
+			ok_sends++;
+			total_sends++;
+			break;
+		case -1:
+			printf_thd("Max RT\r\n");
+			maxrt_sends++;
+			total_sends++;
+			break;
+		case -2:
+			printf_thd("Timeout\r\n");
+			timeout_sends++;
+			total_sends++;
+			break;
+		default:
+			break;
 		}
+		printf_thd("OK sends: %i\r\n"
+				"MaxRT sends: %i\r\n"
+				"Timeout sends: %i\r\n"
+				"Total sends: %i\r\n",
+				ok_sends, maxrt_sends,
+				timeout_sends, total_sends);
 		printf_thd("\r\n");
 		chThdSleepMilliseconds(500);
 	}
